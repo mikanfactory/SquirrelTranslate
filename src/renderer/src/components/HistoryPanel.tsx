@@ -1,4 +1,3 @@
-// components/HistoryPanel.tsx
 import { cn } from "../lib/utils";
 
 export type TranslationRecord = {

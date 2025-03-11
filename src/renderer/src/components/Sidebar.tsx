@@ -1,4 +1,3 @@
-// components/Sidebar.tsx
 import { Home, Clock } from "lucide-react";
 import { Button } from "../components/ui/button";
 
