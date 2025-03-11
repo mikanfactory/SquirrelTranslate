@@ -1,9 +1,9 @@
-import { Squirrel, Languages, History } from "lucide-react";
+import { Squirrel, Languages, History, Settings } from "lucide-react";
 import { Button } from "../components/ui/button";
 
 type SidebarProps = {
-  activeTab: "translate" | "history";
-  onTabChange: (tab: "translate" | "history") => void;
+  activeTab: "translate" | "history" | "settings";
+  onTabChange: (tab: "translate" | "history" | "settings") => void;
 };
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
@@ -32,6 +32,15 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         >
           <History className="h-5 w-5" />
           <span className="sr-only">History</span>
+        </Button>
+        <Button
+          variant={activeTab === "settings" ? "secondary" : "ghost"}
+          size="icon"
+          className="w-12 h-12"
+          onClick={() => onTabChange("settings")}
+        >
+          <Settings className="h-5 w-5" />
+          <span className="sr-only">Settings</span>
         </Button>
       </nav>
     </div>

@@ -8,7 +8,7 @@ import { TranslatePanel } from "./components/TranslatePanel";
 import { HistoryPanel, TranslationRecord } from "./components/HistoryPanel";
 
 export default function TranslationApp() {
-  const [activeTab, setActiveTab] = useState<"translate" | "history">("translate");
+  const [activeTab, setActiveTab] = useState<"translate" | "history" | "settings">("translate");
   const [inputText, setInputText] = useState("");
   const [translatedText, setTranslatedText] = useState("");
   const [history, setHistory] = useState<TranslationRecord[]>([]);
@@ -82,13 +82,20 @@ export default function TranslationApp() {
               onInputChange={setInputText}
               onTranslate={handleTranslate}
             />
+          ) : activeTab === "history"  ? (
+            <HistoryPanel
+              history={history}
+              selectedHistoryItem={selectedHistoryItem}
+              onSelectHistoryItem={setSelectedHistoryItem}
+            />
           ) : (
             <HistoryPanel
               history={history}
               selectedHistoryItem={selectedHistoryItem}
               onSelectHistoryItem={setSelectedHistoryItem}
             />
-          )}
+          )
+        }
         </main>
       </div>
     </div>
