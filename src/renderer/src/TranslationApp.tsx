@@ -18,18 +18,18 @@ export default function TranslationApp() {
   // 環境変数の取得
   useEffect(() => {
     // Electron環境の場合はpreloadスクリプトから環境変数を取得
-    if (import.meta.env.NEXT_PUBLIC_OPENAI_API_KEY) {
-      setApiKey(import.meta.env.EXT_PUBLIC_OPENAI_API_KEY);
+    if (import.meta.env.RENDERER_VITE_OPENAI_API_KEY) {
+      setApiKey(import.meta.env.RENDERER_VITE_OPENAI_API_KEY);
     } else {
       // ブラウザ環境の場合は通常の環境変数を使用
-      setApiKey(import.meta.env.NEXT_PUBLIC_OPENAI_API_KEY || '');
+      setApiKey(import.meta.env.RENDERER_VITE_OPENAI_API_KEY || '');
     }
   }, []);
 
   // OpenAI クライアントの初期化
   const openai = new OpenAI({
-    apiKey: apiKey || import.meta.env.NEXT_PUBLIC_OPENAI_API_KEY || '',
-    dangerouslyAllowBrowser: true // クライアントサイドでの使用を許可
+    apiKey: apiKey || import.meta.env.RENDERER_VITE_OPENAI_API_KEY,
+    dangerouslyAllowBrowser: true,
   });
 
   const handleTranslate = async () => {
@@ -38,11 +38,11 @@ export default function TranslationApp() {
     try {
       // OpenAI APIを使用して翻訳
       const response = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o-mini",
         messages: [
           {
             role: "system",
-            content: "あなたは翻訳アシスタントです。テキストを日本語に翻訳してください。元の言語は自動的に検出してください。翻訳のみを返してください。"
+            content: "あなたは翻訳アシスタントです。日本語か英語を与えます。英語の場合は日本語に、日本語の場合は英語に翻訳してください。翻訳のみを返してください。"
           },
           {
             role: "user",
