@@ -5,8 +5,8 @@ CREATE TABLE IF NOT EXISTS translation_logs (
   translated_text TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-`;
+`
 
 export const down = `
 DROP TABLE IF EXISTS translation_logs;
-`;
+`

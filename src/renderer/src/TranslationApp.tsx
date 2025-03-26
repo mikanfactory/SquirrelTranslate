@@ -14,6 +14,7 @@ export default function TranslationApp() {
   const [history, setHistory] = useState<TranslationRecord[]>([])
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<TranslationRecord | null>(null)
   const [apiKey, setApiKey] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(false)
 
   // 環境変数の取得
   useEffect(() => {
@@ -25,6 +26,37 @@ export default function TranslationApp() {
       setApiKey(import.meta.env.RENDERER_VITE_OPENAI_API_KEY || '')
     }
   }, [])
+
+  // 履歴タブが選択されたときに翻訳履歴を読み込む
+  useEffect(() => {
+    if (activeTab === 'history') {
+      loadTranslationLogs()
+    }
+  }, [activeTab])
+
+  // データベースから翻訳履歴を読み込む
+  const loadTranslationLogs = async () => {
+    setIsLoading(true)
+    try {
+      const result = await window.api.getTranslationLogs()
+      if (result.success && result.logs) {
+        // データベースのレコードをTranslationRecord形式に変換
+        const formattedLogs: TranslationRecord[] = result.logs.map((log) => ({
+          id: log.id.toString(),
+          timestamp: new Date(log.created_at).toLocaleString('ja-JP'),
+          sourceText: log.source_text,
+          translatedText: log.translated_text
+        }))
+        setHistory(formattedLogs)
+      } else {
+        console.error('Failed to load translation logs:', result.error)
+      }
+    } catch (error) {
+      console.error('Error loading translation logs:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // OpenAI クライアントの初期化
   const openai = new OpenAI({
@@ -55,6 +87,13 @@ export default function TranslationApp() {
 
       const translatedContent = response.choices[0]?.message?.content || '翻訳エラーが発生しました'
       setTranslatedText(translatedContent)
+
+      // データベースに翻訳結果を保存
+      try {
+        await window.api.saveTranslationLog(inputText, translatedContent)
+      } catch (dbError) {
+        console.error('Failed to save translation to database:', dbError)
+      }
 
       // 履歴に追加
       const newRecord: TranslationRecord = {
@@ -88,12 +127,14 @@ export default function TranslationApp() {
               history={history}
               selectedHistoryItem={selectedHistoryItem}
               onSelectHistoryItem={setSelectedHistoryItem}
+              isLoading={isLoading}
             />
           ) : (
             <HistoryPanel
               history={history}
               selectedHistoryItem={selectedHistoryItem}
               onSelectHistoryItem={setSelectedHistoryItem}
+              isLoading={isLoading}
             />
           )}
         </main>

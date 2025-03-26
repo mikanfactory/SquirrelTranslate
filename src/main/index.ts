@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { initializeDatabase } from './database/db'
+import { initializeDatabase, saveTranslationLog, getTranslationLogs } from './database/db'
 
 function createWindow(): void {
   // Create the browser window.
@@ -59,6 +59,27 @@ app.whenReady().then(async () => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
+
+  // Add IPC handlers for translation logs
+  ipcMain.handle('save-translation-log', async (_, sourceText, translatedText) => {
+    try {
+      const id = await saveTranslationLog(sourceText, translatedText)
+      return { success: true, id }
+    } catch (error: any) {
+      console.error('Error saving translation log:', error)
+      return { success: false, error: error.message || 'Unknown error' }
+    }
+  })
+
+  ipcMain.handle('get-translation-logs', async () => {
+    try {
+      const logs = await getTranslationLogs()
+      return { success: true, logs }
+    } catch (error: any) {
+      console.error('Error getting translation logs:', error)
+      return { success: false, error: error.message || 'Unknown error' }
+    }
+  })
 
   createWindow()
 
