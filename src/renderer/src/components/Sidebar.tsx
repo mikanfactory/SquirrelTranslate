@@ -1,10 +1,10 @@
-import { Squirrel, Languages, History, Settings } from "lucide-react";
-import { Button } from "../components/ui/button";
+import { Squirrel, Languages, History, Settings } from 'lucide-react'
+import { Button } from '../components/ui/button'
 
 type SidebarProps = {
-  activeTab: "translate" | "history" | "settings";
-  onTabChange: (tab: "translate" | "history" | "settings") => void;
-};
+  activeTab: 'translate' | 'history' | 'settings'
+  onTabChange: (tab: 'translate' | 'history' | 'settings') => void
+}
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   return (
@@ -16,33 +16,33 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       </div>
       <nav className="flex flex-col items-center gap-2 mt-8">
         <Button
-          variant={activeTab === "translate" ? "secondary" : "ghost"}
+          variant={activeTab === 'translate' ? 'secondary' : 'ghost'}
           size="icon"
           className="w-12 h-12"
-          onClick={() => onTabChange("translate")}
+          onClick={() => onTabChange('translate')}
         >
           <Languages className="h-5 w-5" />
           <span className="sr-only">Translate</span>
         </Button>
         <Button
-          variant={activeTab === "history" ? "secondary" : "ghost"}
+          variant={activeTab === 'history' ? 'secondary' : 'ghost'}
           size="icon"
           className="w-12 h-12"
-          onClick={() => onTabChange("history")}
+          onClick={() => onTabChange('history')}
         >
           <History className="h-5 w-5" />
           <span className="sr-only">History</span>
         </Button>
         <Button
-          variant={activeTab === "settings" ? "secondary" : "ghost"}
+          variant={activeTab === 'settings' ? 'secondary' : 'ghost'}
           size="icon"
           className="w-12 h-12"
-          onClick={() => onTabChange("settings")}
+          onClick={() => onTabChange('settings')}
         >
           <Settings className="h-5 w-5" />
           <span className="sr-only">Settings</span>
         </Button>
       </nav>
     </div>
-  );
+  )
 }

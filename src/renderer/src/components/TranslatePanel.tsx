@@ -1,33 +1,33 @@
-import { useState } from "react";
-import { Textarea } from "../components/ui/textarea";
-import { Button } from "../components/ui/button";
-import { Send, Loader2 } from "lucide-react";
+import { useState } from 'react'
+import { Textarea } from '../components/ui/textarea'
+import { Button } from '../components/ui/button'
+import { Send, Loader2 } from 'lucide-react'
 
 type TranslatePanelProps = {
-  inputText: string;
-  translatedText: string;
-  onInputChange: (value: string) => void;
-  onTranslate: () => Promise<void>;
-};
+  inputText: string
+  translatedText: string
+  onInputChange: (value: string) => void
+  onTranslate: () => Promise<void>
+}
 
 export function TranslatePanel({
   inputText,
   translatedText,
   onInputChange,
-  onTranslate,
+  onTranslate
 }: TranslatePanelProps) {
-  const [isTranslating, setIsTranslating] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false)
 
   const handleTranslateClick = async () => {
-    if (!inputText.trim()) return;
-    
-    setIsTranslating(true);
+    if (!inputText.trim()) return
+
+    setIsTranslating(true)
     try {
-      await onTranslate();
+      await onTranslate()
     } finally {
-      setIsTranslating(false);
+      setIsTranslating(false)
     }
-  };
+  }
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-0">
@@ -45,8 +45,8 @@ export function TranslatePanel({
         />
       </div>
       <div className="flex justify-end p-4 border-t">
-        <Button 
-          onClick={handleTranslateClick} 
+        <Button
+          onClick={handleTranslateClick}
           className="px-8"
           disabled={isTranslating || !inputText.trim()}
         >
@@ -64,5 +64,5 @@ export function TranslatePanel({
         </Button>
       </div>
     </div>
-  );
+  )
 }
