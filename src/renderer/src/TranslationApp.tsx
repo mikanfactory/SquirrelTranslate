@@ -6,6 +6,7 @@ import { Sidebar } from './components/Sidebar'
 import { Header } from './components/Header'
 import { TranslatePanel } from './components/TranslatePanel'
 import { HistoryPanel, TranslationRecord } from './components/HistoryPanel'
+import { SettingsPanel } from './components/SettingsPanel'
 
 export default function TranslationApp() {
   const [activeTab, setActiveTab] = useState<'translate' | 'history' | 'settings'>('translate')
@@ -14,6 +15,9 @@ export default function TranslationApp() {
   const [history, setHistory] = useState<TranslationRecord[]>([])
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<TranslationRecord | null>(null)
   const [apiKey, setApiKey] = useState<string>('')
+  const [prompt, setPrompt] = useState<string>(
+    'あなたは翻訳アシスタントです。日本語か英語を与えます。英語の場合は日本語に、日本語の場合は英語に翻訳してください。翻訳のみを返してください。'
+  )
   const [isLoading, setIsLoading] = useState(false)
 
   // 環境変数の取得
@@ -74,8 +78,7 @@ export default function TranslationApp() {
         messages: [
           {
             role: 'system',
-            content:
-              'あなたは翻訳アシスタントです。日本語か英語を与えます。英語の場合は日本語に、日本語の場合は英語に翻訳してください。翻訳のみを返してください。'
+            content: prompt
           },
           {
             role: 'user',
@@ -129,14 +132,14 @@ export default function TranslationApp() {
               onSelectHistoryItem={setSelectedHistoryItem}
               isLoading={isLoading}
             />
-          ) : (
-            <HistoryPanel
-              history={history}
-              selectedHistoryItem={selectedHistoryItem}
-              onSelectHistoryItem={setSelectedHistoryItem}
-              isLoading={isLoading}
+          ) : activeTab === 'settings' ? (
+            <SettingsPanel
+              apiKey={apiKey}
+              onApiKeyChange={setApiKey}
+              prompt={prompt}
+              onPromptChange={setPrompt}
             />
-          )}
+          ) : null}
         </main>
       </div>
     </div>
