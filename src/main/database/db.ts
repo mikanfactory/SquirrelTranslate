@@ -60,34 +60,43 @@ export function getTranslationLogs(): Promise<any[]> {
 export async function initializeDatabase(): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
-      // Check if the database file exists
-      const dbExists = fs.existsSync(DB_PATH)
-
       // Get database connection
       const db = getDbConnection()
 
-      // If the database doesn't exist, run migrations
-      if (!dbExists) {
-        console.log('Database file does not exist. Running migrations...')
-
-        // Run the migration to create the translation_logs table
-        db.exec(createTranslationLogsTable, (err) => {
+      // Check if the translation_logs table exists
+      db.get(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='translation_logs'",
+        (err, row) => {
           if (err) {
-            console.error('Error running migration:', err)
+            console.error('Error checking for table:', err)
             db.close()
             reject(err)
             return
           }
 
-          console.log('Migration completed successfully')
-          db.close()
-          resolve()
-        })
-      } else {
-        console.log('Database already exists. Skipping migrations.')
-        db.close()
-        resolve()
-      }
+          // If the table doesn't exist, run the migration
+          if (!row) {
+            console.log('translation_logs table does not exist. Running migrations...')
+
+            db.exec(createTranslationLogsTable, (err) => {
+              if (err) {
+                console.error('Error running migration:', err)
+                db.close()
+                reject(err)
+                return
+              }
+
+              console.log('Migration completed successfully')
+              db.close()
+              resolve()
+            })
+          } else {
+            console.log('translation_logs table already exists. Skipping migrations.')
+            db.close()
+            resolve()
+          }
+        }
+      )
     } catch (error) {
       console.error('Error initializing database:', error)
       reject(error)
