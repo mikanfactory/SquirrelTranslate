@@ -1,6 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import OpenAI from 'openai'
 import icon from '../../resources/icon.png?asset'
 import { initializeDatabase, saveTranslationLog, getTranslationLogs } from './database/db'
 
@@ -59,6 +60,42 @@ app.whenReady().then(async () => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
+
+  // Add IPC handler for OpenAI translation
+  ipcMain.handle('translate-text', async (_, text, prompt, apiKey) => {
+    try {
+      // Initialize OpenAI client with the provided API key
+      const openai = new OpenAI({
+        apiKey: apiKey || process.env.OPENAI_API_KEY
+      })
+
+      // Call OpenAI API to translate the text
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: prompt
+          },
+          {
+            role: 'user',
+            content: text
+          }
+        ],
+        temperature: 0.3
+      })
+
+      const translatedContent = response.choices[0]?.message?.content || '翻訳エラーが発生しました'
+      return { success: true, translatedText: translatedContent }
+    } catch (error: any) {
+      console.error('Translation error:', error)
+      return {
+        success: false,
+        error: error.message || 'Unknown error',
+        translatedText: '翻訳中にエラーが発生しました。APIキーが設定されているか確認してください。'
+      }
+    }
+  })
 
   // Add IPC handlers for translation logs
   ipcMain.handle('save-translation-log', async (_, sourceText, translatedText) => {

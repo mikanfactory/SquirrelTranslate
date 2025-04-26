@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import OpenAI from 'openai'
 import { Sidebar } from './components/Sidebar'
 import { Header } from './components/Header'
 import { TranslatePanel } from './components/TranslatePanel'
@@ -62,50 +61,42 @@ export default function TranslationApp() {
     }
   }
 
-  // OpenAI クライアントの初期化
-  const openai = new OpenAI({
-    apiKey: apiKey || import.meta.env.RENDERER_VITE_OPENAI_API_KEY,
-    dangerouslyAllowBrowser: true
-  })
-
   const handleTranslate = async () => {
     if (!inputText.trim()) return
 
     try {
-      // OpenAI APIを使用して翻訳
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: prompt
-          },
-          {
-            role: 'user',
-            content: inputText
-          }
-        ],
-        temperature: 0.3
-      })
+      // メインプロセス経由でOpenAI APIを使用して翻訳
+      const result = await window.api.translateText(
+        inputText,
+        prompt,
+        apiKey || import.meta.env.RENDERER_VITE_OPENAI_API_KEY
+      )
 
-      const translatedContent = response.choices[0]?.message?.content || '翻訳エラーが発生しました'
-      setTranslatedText(translatedContent)
+      if (result.success) {
+        setTranslatedText(result.translatedText)
 
-      // データベースに翻訳結果を保存
-      try {
-        await window.api.saveTranslationLog(inputText, translatedContent)
-      } catch (dbError) {
-        console.error('Failed to save translation to database:', dbError)
+        // データベースに翻訳結果を保存
+        try {
+          await window.api.saveTranslationLog(inputText, result.translatedText)
+        } catch (dbError) {
+          console.error('Failed to save translation to database:', dbError)
+        }
+
+        // 履歴に追加
+        const newRecord: TranslationRecord = {
+          id: Date.now().toString(),
+          timestamp: new Date().toLocaleString('ja-JP'),
+          sourceText: inputText,
+          translatedText: result.translatedText
+        }
+        setHistory([newRecord, ...history])
+      } else {
+        console.error('翻訳エラー:', result.error)
+        setTranslatedText(
+          result.translatedText ||
+            '翻訳中にエラーが発生しました。APIキーが設定されているか確認してください。'
+        )
       }
-
-      // 履歴に追加
-      const newRecord: TranslationRecord = {
-        id: Date.now().toString(),
-        timestamp: new Date().toLocaleString('ja-JP'),
-        sourceText: inputText,
-        translatedText: translatedContent
-      }
-      setHistory([newRecord, ...history])
     } catch (error) {
       console.error('翻訳エラー:', error)
       setTranslatedText('翻訳中にエラーが発生しました。APIキーが設定されているか確認してください。')

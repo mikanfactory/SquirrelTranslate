@@ -4,6 +4,11 @@ declare global {
   interface Window {
     electron: ElectronAPI
     api: {
+      translateText: (
+        text: string,
+        prompt: string,
+        apiKey: string
+      ) => Promise<{ success: boolean; translatedText: string; error?: string }>
       saveTranslationLog: (
         sourceText: string,
         translatedText: string
