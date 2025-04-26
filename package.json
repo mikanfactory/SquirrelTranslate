@@ -1,5 +1,5 @@
 {
-  "name": "electron-app",
+  "name": "squirrel-translate",
   "version": "1.0.0",
   "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
@@ -44,6 +44,7 @@
     "clsx": "^2.1.1",
     "electron": "^34.2.0",
     "electron-builder": "^25.1.8",
+    "electron-icon-maker": "^0.0.5",
     "electron-vite": "^3.0.0",
     "eslint": "^9.20.1",
     "eslint-plugin-react": "^7.37.4",
