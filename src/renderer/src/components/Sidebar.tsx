@@ -11,8 +11,8 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   return (
     <div className="w-16 border-r bg-muted/30 flex flex-col items-center">
       <div className="p-2 mt-2">
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-          <img src={iconImage} alt="SquirrelTranslate" className="w-6 h-6" />
+        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
+          <img src={iconImage} alt="SquirrelTranslate" className="w-10 h-10" />
         </div>
       </div>
       <nav className="flex flex-col items-center gap-2 mt-8">
