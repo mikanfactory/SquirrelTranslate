@@ -1,9 +1,11 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, safeStorage } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import OpenAI from 'openai'
 import icon from '../../resources/icon.png?asset'
 import { initializeDatabase, saveTranslationLog, getTranslationLogs } from './database/db'
+import fs from 'fs'
+import path from 'path'
 
 function createWindow(): void {
   // Create the browser window.
@@ -37,6 +39,52 @@ function createWindow(): void {
   }
 }
 
+// API key storage file path
+const API_KEY_FILE = path.join(app.getPath('userData'), 'api-key.enc')
+
+// Function to save API key
+async function saveApiKey(apiKey: string): Promise<void> {
+  try {
+    if (!apiKey) {
+      // If empty, delete the file if it exists
+      if (fs.existsSync(API_KEY_FILE)) {
+        fs.unlinkSync(API_KEY_FILE)
+      }
+      return
+    }
+
+    // Encrypt the API key
+    const encryptedData = safeStorage.encryptString(apiKey)
+
+    // Save to file
+    fs.writeFileSync(API_KEY_FILE, encryptedData)
+  } catch (error) {
+    console.error('Error saving API key:', error)
+    throw error
+  }
+}
+
+// Function to get API key
+function getApiKey(): string {
+  try {
+    // Check if file exists
+    if (!fs.existsSync(API_KEY_FILE)) {
+      return ''
+    }
+
+    // Read and decrypt
+    const encryptedData = fs.readFileSync(API_KEY_FILE)
+    if (encryptedData.length === 0) {
+      return ''
+    }
+
+    return safeStorage.decryptString(encryptedData)
+  } catch (error) {
+    console.error('Error reading API key:', error)
+    return ''
+  }
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -61,12 +109,41 @@ app.whenReady().then(async () => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
+  // Add IPC handlers for API key management
+  ipcMain.handle('save-api-key', async (_, apiKey) => {
+    try {
+      await saveApiKey(apiKey)
+      return { success: true }
+    } catch (error: any) {
+      console.error('Error saving API key:', error)
+      return { success: false, error: error.message || 'Unknown error' }
+    }
+  })
+
+  ipcMain.handle('get-api-key', async () => {
+    try {
+      const apiKey = getApiKey()
+      return { success: true, apiKey }
+    } catch (error: any) {
+      console.error('Error getting API key:', error)
+      return { success: false, error: error.message || 'Unknown error' }
+    }
+  })
+
   // Add IPC handler for OpenAI translation
   ipcMain.handle('translate-text', async (_, text, prompt) => {
     try {
-      // Initialize OpenAI client with the environment variable API key
+      // Get the saved API key, fall back to environment variable if not available
+      const savedApiKey = getApiKey()
+      const apiKey = savedApiKey || import.meta.env.MAIN_VITE_OPENAI_API_KEY
+
+      if (!apiKey) {
+        throw new Error('APIキーが設定されていません。設定画面からAPIキーを設定してください。')
+      }
+
+      // Initialize OpenAI client with the API key
       const openai = new OpenAI({
-        apiKey: import.meta.env.MAIN_VITE_OPENAI_API_KEY
+        apiKey
       })
 
       // Call OpenAI API to translate the text

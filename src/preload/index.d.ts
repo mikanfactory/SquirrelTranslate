@@ -13,6 +13,8 @@ declare global {
         translatedText: string
       ) => Promise<{ success: boolean; id?: number; error?: string }>
       getTranslationLogs: () => Promise<{ success: boolean; logs?: any[]; error?: string }>
+      saveApiKey: (apiKey: string) => Promise<{ success: boolean; error?: string }>
+      getApiKey: () => Promise<{ success: boolean; apiKey?: string; error?: string }>
     }
   }
 }

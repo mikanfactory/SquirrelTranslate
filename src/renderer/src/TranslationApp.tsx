@@ -19,16 +19,47 @@ export default function TranslationApp() {
   )
   const [isLoading, setIsLoading] = useState(false)
 
-  // 環境変数の取得
+  // 保存されたAPIキーの取得
   useEffect(() => {
-    // Electron環境の場合はpreloadスクリプトから環境変数を取得
-    if (import.meta.env.RENDERER_VITE_OPENAI_API_KEY) {
-      setApiKey(import.meta.env.RENDERER_VITE_OPENAI_API_KEY)
-    } else {
-      // ブラウザ環境の場合は通常の環境変数を使用
-      setApiKey(import.meta.env.RENDERER_VITE_OPENAI_API_KEY || '')
+    const loadApiKey = async () => {
+      try {
+        // 保存されたAPIキーを取得
+        const result = await window.api.getApiKey()
+        if (result.success && result.apiKey) {
+          setApiKey(result.apiKey)
+        } else if (import.meta.env.RENDERER_VITE_OPENAI_API_KEY) {
+          // フォールバック: 環境変数からAPIキーを取得
+          setApiKey(import.meta.env.RENDERER_VITE_OPENAI_API_KEY)
+        }
+      } catch (error) {
+        console.error('APIキーの読み込みに失敗しました:', error)
+        // エラー時は環境変数を使用
+        if (import.meta.env.RENDERER_VITE_OPENAI_API_KEY) {
+          setApiKey(import.meta.env.RENDERER_VITE_OPENAI_API_KEY)
+        }
+      }
     }
+
+    loadApiKey()
   }, [])
+
+  // APIキーが変更されたときに保存
+  useEffect(() => {
+    const saveApiKeyToStorage = async () => {
+      if (apiKey) {
+        try {
+          await window.api.saveApiKey(apiKey)
+        } catch (error) {
+          console.error('APIキーの保存に失敗しました:', error)
+        }
+      }
+    }
+
+    // 初期ロード時は保存しない（空文字列の場合）
+    if (apiKey) {
+      saveApiKeyToStorage()
+    }
+  }, [apiKey])
 
   // 履歴タブが選択されたときに翻訳履歴を読み込む
   useEffect(() => {
@@ -66,10 +97,7 @@ export default function TranslationApp() {
 
     try {
       // メインプロセス経由でOpenAI APIを使用して翻訳
-      const result = await window.api.translateText(
-        inputText,
-        prompt
-      )
+      const result = await window.api.translateText(inputText, prompt)
 
       if (result.success) {
         setTranslatedText(result.translatedText)
