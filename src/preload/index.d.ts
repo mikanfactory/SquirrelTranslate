@@ -6,8 +6,7 @@ declare global {
     api: {
       translateText: (
         text: string,
-        prompt: string,
-        apiKey: string
+        prompt: string
       ) => Promise<{ success: boolean; translatedText: string; error?: string }>
       saveTranslationLog: (
         sourceText: string,

@@ -62,11 +62,11 @@ app.whenReady().then(async () => {
   ipcMain.on('ping', () => console.log('pong'))
 
   // Add IPC handler for OpenAI translation
-  ipcMain.handle('translate-text', async (_, text, prompt, apiKey) => {
+  ipcMain.handle('translate-text', async (_, text, prompt) => {
     try {
-      // Initialize OpenAI client with the provided API key
+      // Initialize OpenAI client with the environment variable API key
       const openai = new OpenAI({
-        apiKey: apiKey || process.env.OPENAI_API_KEY
+        apiKey: import.meta.env.MAIN_VITE_OPENAI_API_KEY
       })
 
       // Call OpenAI API to translate the text

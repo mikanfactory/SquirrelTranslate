@@ -68,8 +68,7 @@ export default function TranslationApp() {
       // メインプロセス経由でOpenAI APIを使用して翻訳
       const result = await window.api.translateText(
         inputText,
-        prompt,
-        apiKey || import.meta.env.RENDERER_VITE_OPENAI_API_KEY
+        prompt
       )
 
       if (result.success) {

@@ -3,8 +3,8 @@ import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
 const api = {
-  translateText: (text: string, prompt: string, apiKey: string) =>
-    ipcRenderer.invoke('translate-text', text, prompt, apiKey),
+  translateText: (text: string, prompt: string) =>
+    ipcRenderer.invoke('translate-text', text, prompt),
   saveTranslationLog: (sourceText: string, translatedText: string) =>
     ipcRenderer.invoke('save-translation-log', sourceText, translatedText),
   getTranslationLogs: () => ipcRenderer.invoke('get-translation-logs')
