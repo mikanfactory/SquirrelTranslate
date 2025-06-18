@@ -21,14 +21,22 @@ export function TranslatePanel({
     if (!inputText.trim() || isLoading) return
     await onTranslate()
   }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleTranslateClick()
+    }
+  }
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-0">
         <Textarea
-          placeholder="テキストを入力してください"
+          placeholder="テキストを入力してください (Enterで翻訳、Shift+Enterで改行)"
           className="flex-1 resize-none text-lg p-4 rounded-none border-r border-t-0 border-l-0 border-b-0 focus-visible:ring-0 focus-visible:ring-offset-0"
           value={inputText}
           onChange={(e) => onInputChange(e.target.value)}
+          onKeyDown={handleKeyDown}
         />
         <Textarea
           readOnly
