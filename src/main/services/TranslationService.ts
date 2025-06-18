@@ -15,7 +15,7 @@ export class TranslationService {
       // Get the saved API key, fall back to environment variable if not available
       const apiKeyResult = this.apiKeyService.getApiKey()
       let apiKey = ''
-      
+
       if (apiKeyResult.success && apiKeyResult.apiKey) {
         apiKey = apiKeyResult.apiKey
       } else {
