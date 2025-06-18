@@ -47,7 +47,7 @@ export const useHistory = () => {
         setIsLoading(false)
       }
     }
-  }, [api])
+  }, [api.getTranslationLogs])
 
   const addToHistory = useCallback((record: TranslationRecord) => {
     setHistory((prev) => [record, ...prev])

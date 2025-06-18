@@ -76,7 +76,16 @@ export class WordSearchService {
 
       // Parse JSON response
       try {
-        const parsed = JSON.parse(content)
+        // OpenAI might wrap response in markdown code blocks, let's clean it
+        let cleanContent = content.trim()
+        if (cleanContent.startsWith('```json')) {
+          cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '')
+        } else if (cleanContent.startsWith('```')) {
+          cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '')
+        }
+
+        const parsed = JSON.parse(cleanContent)
+
         if (!parsed.results || !Array.isArray(parsed.results)) {
           throw new Error('Invalid response format')
         }

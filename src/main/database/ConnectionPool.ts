@@ -103,20 +103,25 @@ export class ConnectionPool {
   }
 
   async executeQuery<T = any>(query: string, params: any[] = []): Promise<T[]> {
+    console.log('ConnectionPool: executeQuery called with query:', query, 'params:', params)
     const connection = await this.getConnection()
+    console.log('ConnectionPool: Got connection, executing query...')
 
     try {
       return new Promise((resolve, reject) => {
         connection.db.all(query, params, (err, rows) => {
           if (err) {
+            console.error('ConnectionPool: Query error:', err)
             reject(err)
             return
           }
+          console.log('ConnectionPool: Query successful, rows:', rows?.length || 0)
           resolve(rows as T[])
         })
       })
     } finally {
       this.releaseConnection(connection)
+      console.log('ConnectionPool: Connection released')
     }
   }
 

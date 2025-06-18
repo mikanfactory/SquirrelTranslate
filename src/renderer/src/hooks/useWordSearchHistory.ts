@@ -26,12 +26,24 @@ export const useWordSearchHistory = () => {
 
       if (result.success && result.logs) {
         // Convert database records to WordSearchRecord format
-        const formattedLogs: WordSearchRecord[] = result.logs.map((log) => ({
-          id: log.id.toString(),
-          timestamp: new Date(log.created_at).toLocaleString('ja-JP'),
-          japaneseWord: log.japanese_word,
-          results: JSON.parse(log.search_result) // Parse the JSON stored in database
-        }))
+        const formattedLogs: WordSearchRecord[] = result.logs.map((log) => {
+          try {
+            return {
+              id: log.id.toString(),
+              timestamp: new Date(log.created_at).toLocaleString('ja-JP'),
+              japaneseWord: log.japanese_word,
+              results: JSON.parse(log.search_result) // Parse the JSON stored in database
+            }
+          } catch (parseError) {
+            console.error('Failed to parse search result JSON for log', log.id, ':', parseError)
+            return {
+              id: log.id.toString(),
+              timestamp: new Date(log.created_at).toLocaleString('ja-JP'),
+              japaneseWord: log.japanese_word,
+              results: [] // Fallback to empty results
+            }
+          }
+        })
         setHistory(formattedLogs)
       } else {
         console.error('Failed to load word search logs:', result.error)
@@ -47,7 +59,7 @@ export const useWordSearchHistory = () => {
         setIsLoading(false)
       }
     }
-  }, [api])
+  }, [api.getWordSearchLogs])
 
   const addToHistory = useCallback((record: WordSearchRecord) => {
     setHistory((prev) => [record, ...prev])

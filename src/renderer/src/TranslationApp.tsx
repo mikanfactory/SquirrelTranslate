@@ -30,14 +30,14 @@ export default function TranslationApp() {
     if (activeTab === 'history') {
       history.loadHistory()
     }
-  }, [activeTab, history])
+  }, [activeTab, history.loadHistory])
 
   // Load word search history when word history tab is selected
   useEffect(() => {
     if (activeTab === 'word-history') {
       wordSearchHistory.loadHistory()
     }
-  }, [activeTab, wordSearchHistory])
+  }, [activeTab, wordSearchHistory.loadHistory])
 
   const handleTranslate = async () => {
     const newRecord = await translation.translate(translation.inputText, settings.prompt)

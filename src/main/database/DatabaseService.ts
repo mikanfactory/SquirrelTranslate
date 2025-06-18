@@ -47,11 +47,19 @@ export class DatabaseService {
         "SELECT name FROM sqlite_master WHERE type='table' AND name='word_search_logs'"
       )
 
+      console.log('Word search table check result:', wordSearchTables)
+
       // If the table doesn't exist, run the migration
       if (wordSearchTables.length === 0) {
         console.log('word_search_logs table does not exist. Running migrations...')
         await this.connectionPool.executeRun(createWordSearchLogsTable)
         console.log('Word search logs migration completed successfully')
+
+        // Verify table was created
+        const verifyTables = await this.connectionPool.executeQuery<{ name: string }>(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='word_search_logs'"
+        )
+        console.log('Verification after migration:', verifyTables)
       } else {
         console.log('word_search_logs table already exists.')
       }
@@ -211,16 +219,32 @@ export class DatabaseService {
   }
 
   async getWordSearchLogs(limit = 100, offset = 0): Promise<WordSearchLog[]> {
+    console.log('DatabaseService: getWordSearchLogs called, initialized:', this.initialized)
     if (!this.initialized) {
+      console.log('DatabaseService: Initializing database...')
       await this.initialize()
     }
 
     try {
+      // First, let's check if the table exists and has the right structure
+      console.log('DatabaseService: Checking table structure...')
+      const tableInfo = await this.connectionPool.executeQuery(
+        'PRAGMA table_info(word_search_logs)'
+      )
+      console.log('DatabaseService: Table structure:', tableInfo)
+
+      // Count total records
+      const countResult = await this.connectionPool.executeQuery<{ count: number }>(
+        'SELECT COUNT(*) as count FROM word_search_logs'
+      )
+      console.log('DatabaseService: Total records in table:', countResult[0]?.count || 0)
+
+      console.log('DatabaseService: Executing query with limit:', limit, 'offset:', offset)
       const logs = await this.connectionPool.executeQuery<WordSearchLog>(
         'SELECT * FROM word_search_logs ORDER BY created_at DESC LIMIT ? OFFSET ?',
         [limit, offset]
       )
-
+      console.log('DatabaseService: Query completed, returning', logs.length, 'logs')
       return logs
     } catch (error) {
       console.error('Error getting word search logs:', error)

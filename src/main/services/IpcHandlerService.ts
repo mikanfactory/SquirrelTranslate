@@ -75,8 +75,11 @@ export class IpcHandlerService {
     })
 
     ipcMain.handle('get-word-search-logs', async () => {
+      console.log('IPC: get-word-search-logs called')
       try {
+        console.log('IPC: Calling databaseService.getWordSearchLogs()')
         const logs = await databaseService.getWordSearchLogs()
+        console.log('IPC: Database query completed, logs count:', logs?.length || 0)
         return { success: true, logs }
       } catch (error) {
         console.error('Error getting word search logs:', error)
