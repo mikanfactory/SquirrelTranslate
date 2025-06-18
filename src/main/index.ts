@@ -1,89 +1,16 @@
-import { app, shell, BrowserWindow, ipcMain, safeStorage } from 'electron'
-import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import OpenAI from 'openai'
-import icon from '../../resources/icon.png?asset'
-import { initializeDatabase, saveTranslationLog, getTranslationLogs } from './database/db'
-import fs from 'fs'
-import path from 'path'
+import { app, BrowserWindow } from 'electron'
+import { electronApp, optimizer } from '@electron-toolkit/utils'
+import { initializeDatabase } from './database/db'
+import { ApiKeyService } from './services/ApiKeyService'
+import { TranslationService } from './services/TranslationService'
+import { IpcHandlerService } from './services/IpcHandlerService'
+import { WindowManagerService } from './services/WindowManagerService'
 
-function createWindow(): void {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 870,
-    show: false,
-    autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
-    }
-  })
-
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
-  })
-
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
-  })
-
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
-  }
-}
-
-// API key storage file path
-const API_KEY_FILE = path.join(app.getPath('userData'), 'api-key.enc')
-
-// Function to save API key
-async function saveApiKey(apiKey: string): Promise<void> {
-  try {
-    if (!apiKey) {
-      // If empty, delete the file if it exists
-      if (fs.existsSync(API_KEY_FILE)) {
-        fs.unlinkSync(API_KEY_FILE)
-      }
-      return
-    }
-
-    // Encrypt the API key
-    const encryptedData = safeStorage.encryptString(apiKey)
-
-    // Save to file
-    fs.writeFileSync(API_KEY_FILE, encryptedData)
-  } catch (error) {
-    console.error('Error saving API key:', error)
-    throw error
-  }
-}
-
-// Function to get API key
-function getApiKey(): string {
-  try {
-    // Check if file exists
-    if (!fs.existsSync(API_KEY_FILE)) {
-      return ''
-    }
-
-    // Read and decrypt
-    const encryptedData = fs.readFileSync(API_KEY_FILE)
-    if (encryptedData.length === 0) {
-      return ''
-    }
-
-    return safeStorage.decryptString(encryptedData)
-  } catch (error) {
-    console.error('Error reading API key:', error)
-    return ''
-  }
-}
+// Initialize services
+const apiKeyService = new ApiKeyService()
+const translationService = new TranslationService(apiKeyService)
+const ipcHandlerService = new IpcHandlerService(apiKeyService, translationService)
+const windowManagerService = new WindowManagerService()
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -96,6 +23,7 @@ app.whenReady().then(async () => {
   } catch (error) {
     console.error('Failed to initialize database:', error)
   }
+
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
@@ -106,101 +34,18 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  // Register IPC handlers
+  ipcHandlerService.registerHandlers()
 
-  // Add IPC handlers for API key management
-  ipcMain.handle('save-api-key', async (_, apiKey) => {
-    try {
-      await saveApiKey(apiKey)
-      return { success: true }
-    } catch (error: any) {
-      console.error('Error saving API key:', error)
-      return { success: false, error: error.message || 'Unknown error' }
-    }
-  })
-
-  ipcMain.handle('get-api-key', async () => {
-    try {
-      const apiKey = getApiKey()
-      return { success: true, apiKey }
-    } catch (error: any) {
-      console.error('Error getting API key:', error)
-      return { success: false, error: error.message || 'Unknown error' }
-    }
-  })
-
-  // Add IPC handler for OpenAI translation
-  ipcMain.handle('translate-text', async (_, text, prompt) => {
-    try {
-      // Get the saved API key, fall back to environment variable if not available
-      const savedApiKey = getApiKey()
-      const apiKey = savedApiKey || import.meta.env.MAIN_VITE_OPENAI_API_KEY
-
-      if (!apiKey) {
-        throw new Error('APIキーが設定されていません。設定画面からAPIキーを設定してください。')
-      }
-
-      // Initialize OpenAI client with the API key
-      const openai = new OpenAI({
-        apiKey
-      })
-
-      // Call OpenAI API to translate the text
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: prompt
-          },
-          {
-            role: 'user',
-            content: text
-          }
-        ],
-        temperature: 0.3
-      })
-
-      const translatedContent = response.choices[0]?.message?.content || '翻訳エラーが発生しました'
-      return { success: true, translatedText: translatedContent }
-    } catch (error: any) {
-      console.error('Translation error:', error)
-      return {
-        success: false,
-        error: error.message || 'Unknown error',
-        translatedText: '翻訳中にエラーが発生しました。APIキーが設定されているか確認してください。'
-      }
-    }
-  })
-
-  // Add IPC handlers for translation logs
-  ipcMain.handle('save-translation-log', async (_, sourceText, translatedText) => {
-    try {
-      const id = await saveTranslationLog(sourceText, translatedText)
-      return { success: true, id }
-    } catch (error: any) {
-      console.error('Error saving translation log:', error)
-      return { success: false, error: error.message || 'Unknown error' }
-    }
-  })
-
-  ipcMain.handle('get-translation-logs', async () => {
-    try {
-      const logs = await getTranslationLogs()
-      return { success: true, logs }
-    } catch (error: any) {
-      console.error('Error getting translation logs:', error)
-      return { success: false, error: error.message || 'Unknown error' }
-    }
-  })
-
-  createWindow()
+  // Create main window
+  windowManagerService.createWindow()
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) {
+      windowManagerService.createWindow()
+    }
   })
 })
 

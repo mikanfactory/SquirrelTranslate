@@ -12,7 +12,6 @@ function MaskedApiKeyInput({
   placeholder: string
 }) {
   const [isFocused, setIsFocused] = useState(false)
-  const [isEditing, setIsEditing] = useState(false)
 
   // APIキーをマスクする関数
   const maskApiKey = (key: string) => {
@@ -40,12 +39,10 @@ function MaskedApiKeyInput({
 
   const handleBlur = () => {
     setIsFocused(false)
-    setIsEditing(false)
     setDisplayValue(maskApiKey(value)) // フォーカスが外れたらマスク
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setIsEditing(true)
     onChange(e.target.value) // 親コンポーネントに実際の値を通知
     setDisplayValue(e.target.value) // 表示用の値も更新
   }

@@ -1,7 +1,6 @@
 import { app } from 'electron'
 import * as sqlite3 from 'sqlite3'
 import * as path from 'path'
-import * as fs from 'fs'
 import { up as createTranslationLogsTable } from './migrations/001_create_translation_logs'
 
 // Get the user data path for the app
