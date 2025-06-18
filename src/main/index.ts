@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
-import { initializeDatabase } from './database/db'
+import { initializeDatabase, databaseService } from './database/db'
 import { ApiKeyService } from './services/ApiKeyService'
 import { TranslationService } from './services/TranslationService'
 import { IpcHandlerService } from './services/IpcHandlerService'
@@ -55,6 +55,16 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
+  }
+})
+
+// Cleanup resources on app quit
+app.on('before-quit', async () => {
+  try {
+    await databaseService.close()
+    console.log('Database connections closed successfully')
+  } catch (error) {
+    console.error('Error closing database connections:', error)
   }
 })
 
