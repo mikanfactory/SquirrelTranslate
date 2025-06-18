@@ -6,9 +6,13 @@ import { Header } from './components/Header'
 import { TranslatePanel } from './components/TranslatePanel'
 import { HistoryPanel } from './components/HistoryPanel'
 import { SettingsPanel } from './components/SettingsPanel'
+import { WordSearchPanel } from './components/WordSearchPanel'
+import { WordSearchHistoryPanel } from './components/WordSearchHistoryPanel'
 import { useTranslation } from './hooks/useTranslation'
 import { useHistory } from './hooks/useHistory'
 import { useSettings } from './hooks/useSettings'
+import { useWordSearch } from './hooks/useWordSearch'
+import { useWordSearchHistory } from './hooks/useWordSearchHistory'
 import { TabType } from './types'
 
 export default function TranslationApp() {
@@ -18,6 +22,8 @@ export default function TranslationApp() {
   const translation = useTranslation()
   const history = useHistory()
   const settings = useSettings()
+  const wordSearch = useWordSearch()
+  const wordSearchHistory = useWordSearchHistory()
 
   // Load history when history tab is selected
   useEffect(() => {
@@ -26,10 +32,24 @@ export default function TranslationApp() {
     }
   }, [activeTab, history])
 
+  // Load word search history when word history tab is selected
+  useEffect(() => {
+    if (activeTab === 'word-history') {
+      wordSearchHistory.loadHistory()
+    }
+  }, [activeTab, wordSearchHistory])
+
   const handleTranslate = async () => {
     const newRecord = await translation.translate(translation.inputText, settings.prompt)
     if (newRecord) {
       history.addToHistory(newRecord)
+    }
+  }
+
+  const handleWordSearch = async () => {
+    const newRecord = await wordSearch.searchWord(wordSearch.inputWord)
+    if (newRecord) {
+      wordSearchHistory.addToHistory(newRecord)
     }
   }
 
@@ -63,6 +83,23 @@ export default function TranslationApp() {
               isLoading={settings.isLoading}
               error={settings.error}
               onClearError={settings.clearError}
+            />
+          ) : activeTab === 'word-search' ? (
+            <WordSearchPanel
+              inputWord={wordSearch.inputWord}
+              searchResults={wordSearch.searchResults}
+              onInputChange={wordSearch.setInputWord}
+              onSearch={handleWordSearch}
+              isLoading={wordSearch.isSearching}
+              error={wordSearch.error}
+              onClearError={wordSearch.clearError}
+            />
+          ) : activeTab === 'word-history' ? (
+            <WordSearchHistoryPanel
+              history={wordSearchHistory.history}
+              selectedHistoryItem={wordSearchHistory.selectedHistoryItem}
+              onSelectHistoryItem={wordSearchHistory.selectHistoryItem}
+              isLoading={wordSearchHistory.isLoading}
             />
           ) : null}
         </main>

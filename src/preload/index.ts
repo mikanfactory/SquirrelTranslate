@@ -9,7 +9,9 @@ const api = {
     ipcRenderer.invoke('save-translation-log', sourceText, translatedText),
   getTranslationLogs: () => ipcRenderer.invoke('get-translation-logs'),
   saveApiKey: (apiKey: string) => ipcRenderer.invoke('save-api-key', apiKey),
-  getApiKey: () => ipcRenderer.invoke('get-api-key')
+  getApiKey: () => ipcRenderer.invoke('get-api-key'),
+  searchWord: (japaneseWord: string) => ipcRenderer.invoke('search-word', japaneseWord),
+  getWordSearchLogs: () => ipcRenderer.invoke('get-word-search-logs')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

@@ -1,10 +1,18 @@
 import { ConnectionPool } from './ConnectionPool'
 import { up as createTranslationLogsTable } from './migrations/001_create_translation_logs'
+import { up as createWordSearchLogsTable } from './migrations/002_create_word_search_logs'
 
 export interface TranslationLog {
   id: number
   source_text: string
   translated_text: string
+  created_at: string
+}
+
+export interface WordSearchLog {
+  id: number
+  japanese_word: string
+  search_result: string
   created_at: string
 }
 
@@ -21,18 +29,31 @@ export class DatabaseService {
 
     try {
       // Check if the translation_logs table exists
-      const tables = await this.connectionPool.executeQuery<{ name: string }>(
+      const translationTables = await this.connectionPool.executeQuery<{ name: string }>(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='translation_logs'"
       )
 
       // If the table doesn't exist, run the migration
-      if (tables.length === 0) {
+      if (translationTables.length === 0) {
         console.log('translation_logs table does not exist. Running migrations...')
-
         await this.connectionPool.executeRun(createTranslationLogsTable)
-        console.log('Migration completed successfully')
+        console.log('Translation logs migration completed successfully')
       } else {
-        console.log('translation_logs table already exists. Skipping migrations.')
+        console.log('translation_logs table already exists.')
+      }
+
+      // Check if the word_search_logs table exists
+      const wordSearchTables = await this.connectionPool.executeQuery<{ name: string }>(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='word_search_logs'"
+      )
+
+      // If the table doesn't exist, run the migration
+      if (wordSearchTables.length === 0) {
+        console.log('word_search_logs table does not exist. Running migrations...')
+        await this.connectionPool.executeRun(createWordSearchLogsTable)
+        console.log('Word search logs migration completed successfully')
+      } else {
+        console.log('word_search_logs table already exists.')
       }
 
       this.initialized = true
@@ -167,6 +188,81 @@ export class DatabaseService {
       return logs
     } catch (error) {
       console.error('Error searching translation logs:', error)
+      throw error
+    }
+  }
+
+  async saveWordSearchLog(japaneseWord: string, searchResult: string): Promise<number> {
+    if (!this.initialized) {
+      await this.initialize()
+    }
+
+    try {
+      const result = await this.connectionPool.executeRun(
+        'INSERT INTO word_search_logs (japanese_word, search_result) VALUES (?, ?)',
+        [japaneseWord, searchResult]
+      )
+
+      return result.lastID
+    } catch (error) {
+      console.error('Error saving word search log:', error)
+      throw error
+    }
+  }
+
+  async getWordSearchLogs(limit = 100, offset = 0): Promise<WordSearchLog[]> {
+    if (!this.initialized) {
+      await this.initialize()
+    }
+
+    try {
+      const logs = await this.connectionPool.executeQuery<WordSearchLog>(
+        'SELECT * FROM word_search_logs ORDER BY created_at DESC LIMIT ? OFFSET ?',
+        [limit, offset]
+      )
+
+      return logs
+    } catch (error) {
+      console.error('Error getting word search logs:', error)
+      throw error
+    }
+  }
+
+  async getWordSearchLogById(id: number): Promise<WordSearchLog | null> {
+    if (!this.initialized) {
+      await this.initialize()
+    }
+
+    try {
+      const logs = await this.connectionPool.executeQuery<WordSearchLog>(
+        'SELECT * FROM word_search_logs WHERE id = ?',
+        [id]
+      )
+
+      return logs.length > 0 ? logs[0] : null
+    } catch (error) {
+      console.error('Error getting word search log by ID:', error)
+      throw error
+    }
+  }
+
+  async searchWordSearchLogs(searchTerm: string, limit = 50, offset = 0): Promise<WordSearchLog[]> {
+    if (!this.initialized) {
+      await this.initialize()
+    }
+
+    try {
+      const logs = await this.connectionPool.executeQuery<WordSearchLog>(
+        `SELECT * FROM word_search_logs 
+         WHERE japanese_word LIKE ? 
+         ORDER BY created_at DESC 
+         LIMIT ? OFFSET ?`,
+        [`%${searchTerm}%`, limit, offset]
+      )
+
+      return logs
+    } catch (error) {
+      console.error('Error searching word search logs:', error)
       throw error
     }
   }

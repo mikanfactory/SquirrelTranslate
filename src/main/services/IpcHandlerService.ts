@@ -1,12 +1,14 @@
 import { ipcMain } from 'electron'
 import { ApiKeyService } from './ApiKeyService'
 import { TranslationService } from './TranslationService'
-import { saveTranslationLog, getTranslationLogs } from '../database/db'
+import { WordSearchService } from './WordSearchService'
+import { saveTranslationLog, getTranslationLogs, databaseService } from '../database/db'
 
 export class IpcHandlerService {
   constructor(
     private apiKeyService: ApiKeyService,
-    private translationService: TranslationService
+    private translationService: TranslationService,
+    private wordSearchService: WordSearchService
   ) {}
 
   registerHandlers(): void {
@@ -49,6 +51,35 @@ export class IpcHandlerService {
         return { success: true, logs }
       } catch (error) {
         console.error('Error getting translation logs:', error)
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        }
+      }
+    })
+
+    // Word search handlers
+    ipcMain.handle('search-word', async (_, japaneseWord) => {
+      const result = await this.wordSearchService.searchWord(japaneseWord)
+
+      // If search was successful, save to database
+      if (result.success && result.results) {
+        try {
+          await databaseService.saveWordSearchLog(japaneseWord, JSON.stringify(result.results))
+        } catch (dbError) {
+          console.error('Failed to save word search log:', dbError)
+        }
+      }
+
+      return result
+    })
+
+    ipcMain.handle('get-word-search-logs', async () => {
+      try {
+        const logs = await databaseService.getWordSearchLogs()
+        return { success: true, logs }
+      } catch (error) {
+        console.error('Error getting word search logs:', error)
         return {
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error'

@@ -3,13 +3,19 @@ import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { initializeDatabase, databaseService } from './database/db'
 import { ApiKeyService } from './services/ApiKeyService'
 import { TranslationService } from './services/TranslationService'
+import { WordSearchService } from './services/WordSearchService'
 import { IpcHandlerService } from './services/IpcHandlerService'
 import { WindowManagerService } from './services/WindowManagerService'
 
 // Initialize services
 const apiKeyService = new ApiKeyService()
 const translationService = new TranslationService(apiKeyService)
-const ipcHandlerService = new IpcHandlerService(apiKeyService, translationService)
+const wordSearchService = new WordSearchService(apiKeyService)
+const ipcHandlerService = new IpcHandlerService(
+  apiKeyService,
+  translationService,
+  wordSearchService
+)
 const windowManagerService = new WindowManagerService()
 
 // This method will be called when Electron has finished

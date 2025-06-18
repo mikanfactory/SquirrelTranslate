@@ -1,10 +1,11 @@
-import { Languages, History, Settings } from 'lucide-react'
+import { Languages, History, Settings, Search, BookOpen } from 'lucide-react'
 import iconImage from '../assets/icon.png'
 import { Button } from '../components/ui/button'
+import { TabType } from '../types'
 
 type SidebarProps = {
-  activeTab: 'translate' | 'history' | 'settings'
-  onTabChange: (tab: 'translate' | 'history' | 'settings') => void
+  activeTab: TabType
+  onTabChange: (tab: TabType) => void
 }
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
@@ -33,6 +34,24 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         >
           <History className="h-5 w-5" />
           <span className="sr-only">History</span>
+        </Button>
+        <Button
+          variant={activeTab === 'word-search' ? 'secondary' : 'ghost'}
+          size="icon"
+          className="w-12 h-12"
+          onClick={() => onTabChange('word-search')}
+        >
+          <Search className="h-5 w-5" />
+          <span className="sr-only">Word Search</span>
+        </Button>
+        <Button
+          variant={activeTab === 'word-history' ? 'secondary' : 'ghost'}
+          size="icon"
+          className="w-12 h-12"
+          onClick={() => onTabChange('word-history')}
+        >
+          <BookOpen className="h-5 w-5" />
+          <span className="sr-only">Word History</span>
         </Button>
         <Button
           variant={activeTab === 'settings' ? 'secondary' : 'ghost'}

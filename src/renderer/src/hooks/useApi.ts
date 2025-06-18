@@ -1,5 +1,11 @@
 import { useCallback } from 'react'
-import { TranslationResult, ApiKeyResult, TranslationLogsResult, ApiResult } from '../types'
+import {
+  TranslationResult,
+  ApiKeyResult,
+  TranslationLogsResult,
+  WordSearchLogsResult,
+  ApiResult
+} from '../types'
 
 export const useApi = () => {
   const translateText = useCallback(
@@ -69,11 +75,50 @@ export const useApi = () => {
     }
   }, [])
 
+  const searchWord = useCallback(
+    async (
+      japaneseWord: string
+    ): Promise<{
+      success: boolean
+      results?: Array<{
+        englishWord: string
+        meaning: string
+        examples: string[]
+      }>
+      error?: string
+    }> => {
+      try {
+        return await window.api.searchWord(japaneseWord)
+      } catch (error) {
+        console.error('Word search error:', error)
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        }
+      }
+    },
+    []
+  )
+
+  const getWordSearchLogs = useCallback(async (): Promise<WordSearchLogsResult> => {
+    try {
+      return await window.api.getWordSearchLogs()
+    } catch (error) {
+      console.error('Get word search logs error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }
+    }
+  }, [])
+
   return {
     translateText,
     saveApiKey,
     getApiKey,
     saveTranslationLog,
-    getTranslationLogs
+    getTranslationLogs,
+    searchWord,
+    getWordSearchLogs
   }
 }

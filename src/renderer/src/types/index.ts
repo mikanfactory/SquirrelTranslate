@@ -28,4 +28,26 @@ export interface TranslationLogsResult extends ApiResult {
   }>
 }
 
-export type TabType = 'translate' | 'history' | 'settings'
+export interface WordSearchResult {
+  englishWord: string
+  meaning: string
+  examples: string[]
+}
+
+export interface WordSearchRecord {
+  id: string
+  timestamp: string
+  japaneseWord: string
+  results: WordSearchResult[]
+}
+
+export interface WordSearchLogsResult extends ApiResult {
+  logs?: Array<{
+    id: number
+    japanese_word: string
+    search_result: string
+    created_at: string
+  }>
+}
+
+export type TabType = 'translate' | 'history' | 'settings' | 'word-search' | 'word-history'
