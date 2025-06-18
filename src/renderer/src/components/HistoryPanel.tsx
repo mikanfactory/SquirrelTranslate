@@ -1,11 +1,5 @@
 import { cn } from '../lib/utils'
-
-export type TranslationRecord = {
-  id: string
-  timestamp: string
-  sourceText: string
-  translatedText: string
-}
+import { TranslationRecord } from '../types'
 
 type HistoryPanelProps = {
   history: TranslationRecord[]

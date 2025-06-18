@@ -65,14 +65,22 @@ type SettingsPanelProps = {
   onApiKeyChange: (value: string) => void
   prompt: string
   onPromptChange: (value: string) => void
+  isLoading?: boolean
+  error?: string | null
+  onClearError?: () => void
 }
 
 export function SettingsPanel({
   apiKey,
   onApiKeyChange,
   prompt,
-  onPromptChange
+  onPromptChange,
+  isLoading = false,
+  error = null,
+  onClearError
 }: SettingsPanelProps) {
+  // TODO: Implement error display and loading states in UI
+  console.log({ isLoading, error, onClearError }) // Temporary to avoid unused variable warnings
   return (
     <div className="h-full p-6 overflow-auto">
       <div className="space-y-6">

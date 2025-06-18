@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Textarea } from '../components/ui/textarea'
 import { Button } from '../components/ui/button'
 import { Send, Loader2 } from 'lucide-react'
@@ -8,25 +7,19 @@ type TranslatePanelProps = {
   translatedText: string
   onInputChange: (value: string) => void
   onTranslate: () => Promise<void>
+  isLoading?: boolean
 }
 
 export function TranslatePanel({
   inputText,
   translatedText,
   onInputChange,
-  onTranslate
+  onTranslate,
+  isLoading = false
 }: TranslatePanelProps) {
-  const [isTranslating, setIsTranslating] = useState(false)
-
   const handleTranslateClick = async () => {
-    if (!inputText.trim()) return
-
-    setIsTranslating(true)
-    try {
-      await onTranslate()
-    } finally {
-      setIsTranslating(false)
-    }
+    if (!inputText.trim() || isLoading) return
+    await onTranslate()
   }
   return (
     <div className="h-full flex flex-col">
@@ -48,9 +41,9 @@ export function TranslatePanel({
         <Button
           onClick={handleTranslateClick}
           className="px-8"
-          disabled={isTranslating || !inputText.trim()}
+          disabled={isLoading || !inputText.trim()}
         >
-          {isTranslating ? (
+          {isLoading ? (
             <>
               翻訳中
               <Loader2 className="ml-2 h-4 w-4 animate-spin" />
